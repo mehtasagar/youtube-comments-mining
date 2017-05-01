@@ -3,8 +3,16 @@ package edu.utd.client;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.List;
-
+import java.util.Properties;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+import edu.stanford.nlp.trees.*;
+import edu.stanford.nlp.util.*;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import edu.utd.authentication.Auth;
@@ -32,36 +40,19 @@ public class CommentHandling {
 	 */
 	public static void main(String[] args) {
 
-		// This OAuth 2.0 access scope allows for full read/write access to the
-		// authenticated user's account and requires requests to use an SSL
-		// connection.
 		List<String> scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube.force-ssl");
-
 		try {
-			// Authorize the request.
 			Credential credential = Auth.authorize(scopes, "commentthreads");
 
-			// This object is used to make YouTube Data API requests.
+			
 			youtube = new YouTube.Builder(Auth.HTTP_TRANSPORT, Auth.JSON_FACTORY, credential)
 					.setApplicationName("youtube-cmdline-commentthreads-sample").build();
 
-			// Prompt the user for the ID of a video to comment on.
-			// Retrieve the video ID that the user is commenting to.
+			
 			String videoId = getVideoId();
 			System.out.println("You chose " + videoId + " to subscribe.");
 
-			// Prompt the user for the comment text.
-			// Retrieve the text that the user is commenting.
-			/*
-			 * String text = getText(); System.out.println("You chose " + text +
-			 * " to subscribe.");
-			 */
-
-			// All the available methods are used in sequence just for the sake
-			// of an example.
-
-			// Call the YouTube Data API's commentThreads.list method to
-			// retrieve video comment threads.
+		
 			CommentThreadListResponse videoCommentsListResponse = youtube.commentThreads().list("snippet")
 					.setMaxResults(100l).setVideoId(videoId).setTextFormat("plainText").execute();
 			List<CommentThread> videoComments = videoCommentsListResponse.getItems();
@@ -87,79 +78,7 @@ public class CommentHandling {
 			// Will use this thread as parent to new reply.
 			String parentId = firstComment.getId();
 
-			// Create a comment snippet with text.
-			/*
-			 * CommentSnippet commentSnippet = new CommentSnippet();
-			 * commentSnippet.setTextOriginal(text);
-			 * commentSnippet.setParentId(parentId);
-			 * 
-			 * // Create a comment with snippet. Comment comment = new
-			 * Comment(); comment.setSnippet(commentSnippet);
-			 */
 
-			/*
-			 * // Call the YouTube Data API's comments.insert method to reply //
-			 * to a comment. // (If the intention is to create a new top-level
-			 * comment, // commentThreads.insert // method should be used
-			 * instead.) Comment commentInsertResponse =
-			 * youtube.comments().insert("snippet", comment) .execute();
-			 * 
-			 * // Print information from the API response. System.out .println(
-			 * "\n================== Created Comment Reply ==================\n"
-			 * ); CommentSnippet snippet = commentInsertResponse.getSnippet();
-			 * System.out.println( "  - Author: " +
-			 * snippet.getAuthorDisplayName()); System.out.println(
-			 * "  - Comment: " + snippet.getTextDisplay()); System.out .println(
-			 * "\n-------------------------------------------------------------\n"
-			 * );
-			 * 
-			 * // Call the YouTube Data API's comments.list method to retrieve
-			 * // existing comment // replies. CommentListResponse
-			 * commentsListResponse = youtube.comments().list("snippet")
-			 * .setParentId(parentId).setTextFormat("plainText").execute();
-			 * List<Comment> comments = commentsListResponse.getItems();
-			 * 
-			 * if (comments.isEmpty()) { System.out.println(
-			 * "Can't get comment replies."); } else { // Print information from
-			 * the API response. System.out .println(
-			 * "\n================== Returned Comment Replies ==================\n"
-			 * ); for (Comment commentReply : comments) { snippet =
-			 * commentReply.getSnippet(); System.out.println("  - Author: " +
-			 * snippet.getAuthorDisplayName()); System.out.println(
-			 * "  - Comment: " + snippet.getTextDisplay()); System.out .println(
-			 * "\n-------------------------------------------------------------\n"
-			 * ); } Comment firstCommentReply = comments.get(0);
-			 * firstCommentReply.getSnippet().setTextOriginal("updated");
-			 * Comment commentUpdateResponse = youtube.comments()
-			 * .update("snippet", firstCommentReply).execute(); // Print
-			 * information from the API response. System.out .println(
-			 * "\n================== Updated Video Comment ==================\n"
-			 * ); snippet = commentUpdateResponse.getSnippet();
-			 * System.out.println("  - Author: " +
-			 * snippet.getAuthorDisplayName()); System.out.println(
-			 * "  - Comment: " + snippet.getTextDisplay()); System.out .println(
-			 * "\n-------------------------------------------------------------\n"
-			 * );
-			 * 
-			 * // Call the YouTube Data API's comments.setModerationStatus //
-			 * method to set moderation // status of an existing comment.
-			 * youtube.comments().setModerationStatus(firstCommentReply.
-			 * getId(), "published"); System.out.println(
-			 * "  -  Changed comment status to published: " +
-			 * firstCommentReply.getId());
-			 * 
-			 * // Call the YouTube Data API's comments.markAsSpam method to //
-			 * mark an existing comment as spam.
-			 * youtube.comments().markAsSpam(firstCommentReply.getId());
-			 * System.out.println("  -  Marked comment as spam: " +
-			 * firstCommentReply.getId());
-			 * 
-			 * // Call the YouTube Data API's comments.delete method to //
-			 * delete an existing comment.
-			 * youtube.comments().delete(firstCommentReply.getId()); System.out
-			 * .println("  -  Deleted comment as spam: " +
-			 * firstCommentReply.getId()) }
-			 */
 
 		} catch (GoogleJsonResponseException e) {
 			System.err.println("GoogleJsonResponseException code: " + e.getDetails().getCode() + " : "
@@ -175,9 +94,7 @@ public class CommentHandling {
 		}
 	}
 
-	/*
-	 * Prompt the user to enter a video ID. Then return the ID.
-	 */
+	
 	private static String getVideoId() throws IOException {
 
 		String videoId = "";
@@ -189,9 +106,7 @@ public class CommentHandling {
 		return videoId;
 	}
 
-	/*
-	 * Prompt the user to enter text for a comment. Then return the text.
-	 */
+	
 	private static String getText() throws IOException {
 
 		String text = "";
@@ -208,19 +123,68 @@ public class CommentHandling {
 	}
 
 	private static void printComments(List<CommentThread> videoComments) {
-
+		Content con = new Content();
 		if (videoComments.isEmpty()) {
 			System.out.println("Can't get video comments.");
 		} else {
 			// Print information from the API response.
-			System.out.println(
-					"\n================== Returned Video Comments " + videoComments.size() + " ==================\n");
-			for (CommentThread videoComment : videoComments) {
-				CommentSnippet snippet = videoComment.getSnippet().getTopLevelComment().getSnippet();
-				System.out.println("  - Author: " + snippet.getAuthorDisplayName());
-				System.out.println("  - Comment: " + snippet.getTextDisplay());
-				System.out.println("\n-------------------------------------------------------------\n");
+			try{
+			    PrintWriter writer = new PrintWriter("YoutubeComments.txt", "UTF-8");
+			    for (CommentThread videoComment : videoComments) {
+					CommentSnippet snippet = videoComment.getSnippet().getTopLevelComment().getSnippet();
+					con.setComment(snippet.getTextDisplay());
+					performSentimentAnalysis(con);
+					System.out.println(con.getComment());
+					System.out.println(con.getSentiment());
+					String comment = con.getComment();
+					String sentiment = con.getSentiment();
+					writer.println("Comment :"+comment+":.:Sentiment :"+sentiment);
+					
+					
+				}
+			   
+			} catch (IOException e) {
+			   // do something
 			}
+			
+			
 		}
 	}
+	
+	public static Content performSentimentAnalysis(Content t) {
+        Properties props = new Properties();
+        props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        int mainSentiment = 0;
+        if (t.getComment() != null && t.getComment().length() > 0) {
+            int longest = 0;
+            Annotation annotation = pipeline.process(t.getComment());
+            for (CoreMap sentence : annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
+                Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
+                int sentiment = RNNCoreAnnotations.getPredictedClass(tree);
+                String partText = sentence.toString();
+                if (partText.length() > longest) {
+                    mainSentiment = sentiment;
+                    longest = partText.length();
+                }
+
+            }
+        }
+        switch (mainSentiment) {
+            case 2:
+                t.setSentiment("NEUTRAL");
+                break;
+            case 1:
+            case 0:
+                t.setSentiment("NEGATIVE");
+                break;
+            case 3:
+            case 4:
+                t.setSentiment("POSITIVE");
+                break;
+            default:
+                break;
+        }
+        return t;
+    }
 }

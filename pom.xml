@@ -7,18 +7,40 @@
 	<name>YoutubeCommentMining</name>
 
 	<dependencies>
+		<!-- Stanford CoreNLP -->
 		<dependency>
-			<groupId>com.google.api-client</groupId>
-			<artifactId>google-api-client</artifactId>
-			<version>1.22.0</version>
+			<groupId>edu.stanford.nlp</groupId>
+			<artifactId>stanford-corenlp</artifactId>
+			<version>3.3.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.google.apis</groupId>
-			<artifactId>google-api-services-youtube</artifactId>
-			<version>v3-rev183-1.22.0</version>
+			<groupId>edu.stanford.nlp</groupId>
+			<artifactId>stanford-corenlp</artifactId>
+			<version>3.3.0</version>
+			<classifier>models</classifier>
 		</dependency>
- <dependency>
-            <groupId>com.google.oauth-client</groupId>
-            <artifactId>google-oauth-client-jetty</artifactId>
-            <version>1.20.0</version>        </dependency>
-	</dependencies></project>
+
+		<dependency>
+			<groupId>edu.stanford.nlp</groupId>
+			<artifactId>stanford-parser</artifactId>
+			<version>3.7.0</version>
+		</dependency>
+		
+			<dependency>
+				<groupId>com.google.api-client</groupId>
+				<artifactId>google-api-client</artifactId>
+				<version>1.22.0</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.apis</groupId>
+				<artifactId>google-api-services-youtube</artifactId>
+				<version>v3-rev183-1.22.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.oauth-client</groupId>
+				<artifactId>google-oauth-client-jetty</artifactId>
+				<version>1.20.0</version>
+			</dependency>
+	</dependencies>
+</project>
