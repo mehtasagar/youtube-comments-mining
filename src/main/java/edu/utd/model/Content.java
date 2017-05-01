@@ -1,4 +1,4 @@
-package edu.utd.client;
+package edu.utd.model;
 
 public class Content {
 	private String comment = "";
