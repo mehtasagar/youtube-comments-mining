@@ -30,6 +30,7 @@ import com.google.api.services.youtube.model.CommentThread;
 import com.google.api.services.youtube.model.CommentListResponse;
 import com.google.api.services.youtube.model.CommentThreadListResponse;
 import com.google.common.collect.Lists;
+import edu.utd.client.KMeansWithEuclideanDistance;
 
 public class CommentHandling {
 	/**
@@ -46,6 +47,7 @@ public class CommentHandling {
 	 *            command line args (not used).
 	 */
 	public static void main(String[] args) {
+		int noOfPoints=10;
 		
 		ArrayList<String> names= new ArrayList<String>();
 		ArrayList<String> ids= new ArrayList<String>();
@@ -66,6 +68,13 @@ public class CommentHandling {
 		ids.add("F7XEY3zQFUY");
 		ids.add("XUmD0OkBpqs");
 		ids.add("rwf95RnfoSQ");
+		ids.add("QXiwlFodZpA");//353
+		ids.add("QOXup8chEoY");//265
+		ids.add("r4mt9xLLHeY");//203
+		ids.add("273oHnoR4NI");//405
+		ids.add("pOyY7I-rFRg");//253
+		ids.add("LZ_HugKUePs");//290
+		ids.add("VUufKJJnHq8");//230
 /*		ids.add("Ke1Y3P9D0Bc");
 		ids.add("CJIXOx2-GZ8");
 		ids.add("rARN6agiW7o");
@@ -140,7 +149,7 @@ public class CommentHandling {
 			Double totalActorFol= 0d;
 			String videoId;
 			// String videoId = getVideoId();
-			for(int i=0;i<3;i++) {
+			for(int i=0;i<noOfPoints;i++) {
 				Movie movie = new Movie();
 				movie.setName(names.get(i));
 				movie.setActorFollowers(actorFollowers.get(i));
@@ -234,19 +243,25 @@ public class CommentHandling {
 			System.out.println(minDirectorFollowers + " " + maxDirectorFollowers);
 			System.out.println(minActorFollowers + " "+ maxActorFollowers);
 			
-			for(int i=0;i<3;i++){
+			for(int i=0;i<noOfPoints;i++){
 				System.out.println("##############################################################################################################");
-				movies.get(i).setDirectorFollowers((Math.abs(movies.get(i).getDirectorFollowers()-(totalDirFol/3)))/(maxDirectorFollowers-minDirectorFollowers));
-				movies.get(i).setActorFollowers((Math.abs(movies.get(i).getActorFollowers()-(totalActorFol/3)))/(maxActorFollowers-minActorFollowers));
+				movies.get(i).setDirectorFollowers((Math.abs(movies.get(i).getDirectorFollowers()-(totalDirFol/noOfPoints)))/(maxDirectorFollowers-minDirectorFollowers));
+				movies.get(i).setActorFollowers((Math.abs(movies.get(i).getActorFollowers()-(totalActorFol/noOfPoints)))/(maxActorFollowers-minActorFollowers));
 				
 				//Movie m =normalize(minNegativeSent,maxNegativeSent,movies.get(i).getNegativeComments());
 				System.out.println(movies.get(i).getName() + " " + movies.get(i).getPositiveComments() + " " +movies.get(i).getNeutralComments()+" "+ movies.get(i).getNegativeComments()+ " " +movies.get(i).getDirectorFollowers()+ " " +movies.get(i).getActorFollowers() );
 				movies.get(i).setOverallWeight((movies.get(i).getPositiveComments()*2)+(movies.get(i).getNegativeComments()*2)+(movies.get(i).getNeutralComments())+(movies.get(i).getActorFollowers()*2.5)+(movies.get(i).getDirectorFollowers()*2.5));
 			}
-			for(int i=0;i<3;i++){
+			for(int i=0;i<noOfPoints;i++){
 				System.out.println("Movie Name: " + movies.get(i).getName() + " Total Weight: "+ movies.get(i).getOverallWeight());
 			}
 			
+			KMeansWithEuclideanDistance kMeans = new KMeansWithEuclideanDistance(3, movies);
+			List<Movie> clusterPoints = new ArrayList<Movie>();
+			clusterPoints.add(new Movie("Centroid1","centroid1",4.0d));
+			clusterPoints.add(new Movie("Centroid2","centroid2",3.25d));
+			clusterPoints.add(new Movie("Centroid3","centroid3",2.75d));
+			kMeans.findMeans(clusterPoints);
 			
 		} catch (GoogleJsonResponseException e) {
 			System.err.println("GoogleJsonResponseException code: " + e.getDetails().getCode() + " : "

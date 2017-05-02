@@ -10,7 +10,26 @@ public class Movie {
 	private Double directorFollowers;
 	private Double overallWeight;
 	private String name;
+	private int assignedCluster;
 	
+	
+	public Movie(String movieId2, String name2, Double overallWeight2) {
+		this.movieId=movieId2;
+		this.name=name2;
+		this.overallWeight=overallWeight2;
+}
+	
+	public Movie() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public int getAssignedCluster() {
+		return assignedCluster;
+	}
+
+	public void setAssignedCluster(int assignedCluster) {
+		this.assignedCluster = assignedCluster;
+	}
 	
 	public String getName() {
 		return name;
@@ -61,5 +80,7 @@ public class Movie {
 		this.directorFollowers = directorFollowers;
 	}
 	
-	
+	public String toString() {
+		return  "(" + this.getName() + ", " + this.getOverallWeight() +", " + this.directorFollowers +", " + this.getActorFollowers() +", " + this.getPositiveComments() +  ", " + this.getNegativeComments() + ", " + this.getNeutralComments()+ ")";
+	}
 }
