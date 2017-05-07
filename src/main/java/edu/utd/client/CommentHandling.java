@@ -2,6 +2,7 @@ package edu.utd.client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -64,7 +65,7 @@ public class CommentHandling {
 	 *            command line args (not used).
 	 */
 	public static void main(String[] args) {
-		int noOfPoints = 3;
+		int noOfPoints = 10;
 
 		ArrayList<String> names = new ArrayList<String>();
 		ArrayList<String> ids = new ArrayList<String>();
@@ -80,10 +81,22 @@ public class CommentHandling {
 		names.add("Fast & Furious 6");
 		names.add("After Earth");
 		names.add("The Internship");
+		Boolean localFile = true;
+		ArrayList<String> localFileNames = new ArrayList<String>();
+		localFileNames.add("Iron Man 3.txt");
+		localFileNames.add("The Iceman.txt");
+		localFileNames.add("The Great Gatsby.txt");
+		localFileNames.add("The_Purge.txt");
+		localFileNames.add("StarTrekIntoDarkness.txt");
+		localFileNames.add("Epic.txt");
+		localFileNames.add("NowYouSeeMe.txt");
+		localFileNames.add("Fast&Furious6.txt");
+		localFileNames.add("AfterEarth.txt");
+		localFileNames.add("TheInternship.txt");
 
-		ids.add("F7XEY3zQFUY");
+/*		ids.add("F7XEY3zQFUY");
 		ids.add("XUmD0OkBpqs");
-		ids.add("rwf95RnfoSQ"); /*
+		ids.add("rwf95RnfoSQ"); 
 		ids.add("QXiwlFodZpA");// 353
 		ids.add("QOXup8chEoY");// 265
 		ids.add("r4mt9xLLHeY");// 203
@@ -91,13 +104,13 @@ public class CommentHandling {
 		ids.add("pOyY7I-rFRg");// 253
 		ids.add("LZ_HugKUePs");// 290
 		ids.add("VUufKJJnHq8");// 230
-*/		
+	*/	
 		
-		/*  ids.add("Ke1Y3P9D0Bc"); ids.add("CJIXOx2-GZ8");
+		  ids.add("Ke1Y3P9D0Bc"); ids.add("CJIXOx2-GZ8");
 		  ids.add("rARN6agiW7o"); ids.add("K0LLaybEuzA");
 		  ids.add("QAEkuVgt6Aw"); ids.add("-xu3JLXfuwQ");
 		  ids.add("4OtM9j2lcUA"); ids.add("dKi5XoeTN0k");
-		  ids.add("CZIt20emgLY"); ids.add("cdnoqCViqUo"); */
+		  ids.add("CZIt20emgLY"); ids.add("cdnoqCViqUo"); 
 		 
 
 		directorFollowers.add(7943d);
@@ -168,43 +181,60 @@ public class CommentHandling {
 				Double positiveSent = new Double(0);
 				Double negativeSent = new Double(0);
 				Double neutralSent = new Double(0);
-
-				MovieDTO tempMovie= new MovieDTO();
-				List<String> allComments= new ArrayList<String>();
+				MovieDTO tempMovie = new MovieDTO();
+				List<String> allComments = new ArrayList<String>();
 				System.out.println("You chose " + videoId + " to subscribe.");
+				CommentThreadListResponse videoCommentsListResponse = null;
+				List<CommentThread> videoComments = new ArrayList<CommentThread>();
 
-				CommentThreadListResponse videoCommentsListResponse = youtube.commentThreads().list("snippet")
-						.setMaxResults(100l).setVideoId(videoId).setTextFormat("plainText").execute();
+				if (localFile) {
+					List<String> comments= new ArrayList<String>();
+					try (BufferedReader br = new BufferedReader(new FileReader(FILENAME + localFileNames.get(i)))) {
+					    String line;
+					    while ((line = br.readLine()) != null) {
+					    	if(!line.isEmpty() && line.length()>0)
+					    	comments.add(line);
+					    }
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					tempMovie = analyseComments(comments);	
+				} else {
+					videoCommentsListResponse = youtube.commentThreads().list("snippet").setMaxResults(100l)
+							.setVideoId(videoId).setTextFormat("plainText").execute();
 
-				List<CommentThread> videoComments = videoCommentsListResponse.getItems();
-				System.out.println("Total results" + videoCommentsListResponse.getPageInfo().getTotalResults());
-				System.out.println("Results per page" + videoCommentsListResponse.getPageInfo().getResultsPerPage());
-				tempMovie=printComments(videoComments);
-				allComments.addAll(tempMovie.getComments());
-				positiveSent = positiveSent + tempMovie.getMovie().getPositiveComments();
-				negativeSent += tempMovie.getMovie().getNegativeComments();
-				neutralSent += tempMovie.getMovie().getNeutralComments();
-				String nextPageToken = videoCommentsListResponse.getNextPageToken();
-				System.out.println("Next Page Token" + nextPageToken);
-			
-				while (nextPageToken != null && !nextPageToken.isEmpty()) {
-					CommentThreadListResponse videoCommentsListResponse1 = youtube.commentThreads().list("snippet")
-							.setMaxResults(100l).setVideoId(videoId).setPageToken(nextPageToken)
-							.setTextFormat("plainText").execute();
-					videoComments = videoCommentsListResponse1.getItems();
-					System.out.println("Total results" + videoCommentsListResponse1.getPageInfo().getTotalResults());
+					videoComments = videoCommentsListResponse.getItems();
+					System.out.println("Total results" + videoCommentsListResponse.getPageInfo().getTotalResults());
 					System.out
-							.println("Results per page" + videoCommentsListResponse1.getPageInfo().getResultsPerPage());
+							.println("Results per page" + videoCommentsListResponse.getPageInfo().getResultsPerPage());
 					tempMovie = printComments(videoComments);
 					allComments.addAll(tempMovie.getComments());
-
 					positiveSent = positiveSent + tempMovie.getMovie().getPositiveComments();
 					negativeSent += tempMovie.getMovie().getNegativeComments();
 					neutralSent += tempMovie.getMovie().getNeutralComments();
-					nextPageToken = videoCommentsListResponse1.getNextPageToken();
-
+					String nextPageToken = videoCommentsListResponse.getNextPageToken();
 					System.out.println("Next Page Token" + nextPageToken);
+					while (nextPageToken != null && !nextPageToken.isEmpty()) {
+						CommentThreadListResponse videoCommentsListResponse1 = youtube.commentThreads().list("snippet")
+								.setMaxResults(100l).setVideoId(videoId).setPageToken(nextPageToken)
+								.setTextFormat("plainText").execute();
+						videoComments = videoCommentsListResponse1.getItems();
+						System.out
+								.println("Total results" + videoCommentsListResponse1.getPageInfo().getTotalResults());
+						System.out.println(
+								"Results per page" + videoCommentsListResponse1.getPageInfo().getResultsPerPage());
+						tempMovie = printComments(videoComments);
+						allComments.addAll(tempMovie.getComments());
+
+						positiveSent = positiveSent + tempMovie.getMovie().getPositiveComments();
+						negativeSent += tempMovie.getMovie().getNegativeComments();
+						neutralSent += tempMovie.getMovie().getNeutralComments();
+						nextPageToken = videoCommentsListResponse1.getNextPageToken();
+
+						System.out.println("Next Page Token" + nextPageToken);
+					}
 				}
+
 				if (negativeSent < minNegativeSent) {
 					minNegativeSent = negativeSent;
 				}
@@ -248,7 +278,7 @@ public class CommentHandling {
 				movies.add(movie);
 			}
 
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < noOfPoints; i++) {
 				System.out.println(
 						"##############################################################################################################");
 				System.out.println(movies.get(i).getName() + " " + movies.get(i).getPositiveComments() + " "
@@ -356,6 +386,45 @@ public class CommentHandling {
 		}
 
 	}*/
+	
+	
+	private static MovieDTO analyseComments(List<String> comments) {
+		Content con = new Content();
+		MovieDTO mdto = new MovieDTO();
+		Movie m = new Movie();
+		Double positiveSentiments = new Double(0);
+		Double negativeSentiments = new Double(0);
+		Double neutralSentiments = new Double(0);
+		
+		if (comments.isEmpty()) {
+			System.out.println("Can't get video comments.");
+		} else {
+			System.out.println("Total comments :: " + comments.size());
+			for (String comment : comments) {
+				
+				con.setComment(comment);
+				performSentimentAnalysis(con);
+				
+				String sentiment = con.getSentiment();
+				if (sentiment.equalsIgnoreCase("POSITIVE")) {
+					positiveSentiments += 1l;
+				} else if (sentiment.equalsIgnoreCase("NEGATIVE")) {
+					negativeSentiments += 1l;
+				} else {
+					neutralSentiments += 1l;
+
+				}
+
+			}
+			m.setNegativeComments(negativeSentiments);
+			m.setPositiveComments(positiveSentiments);
+			m.setNeutralComments(neutralSentiments);
+			mdto.setMovie(m);
+			mdto.setComments(comments);
+
+		}
+		return mdto;
+	}
 
 	private static Movie normalize(Double minNegativeSent, Double maxNegativeSent, Double negativeComments) {
 		// TODO Auto-generated method stub
