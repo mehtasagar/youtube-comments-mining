@@ -1,53 +1,40 @@
 package edu.utd.client;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.ling.*;
-import edu.stanford.nlp.rnn.RNNCoreAnnotations;
-import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
-import edu.stanford.nlp.trees.*;
-import edu.stanford.nlp.util.*;
-
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-
-import edu.utd.authentication.Auth;
-import edu.utd.model.Content;
-import edu.utd.model.Movie;
-import edu.utd.model.MovieDTO;
-import edu.utd.utility.Constants;
-
-import org.elasticsearch.*;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.Comment;
 import com.google.api.services.youtube.model.CommentSnippet;
 import com.google.api.services.youtube.model.CommentThread;
-import com.google.api.services.youtube.model.CommentListResponse;
 import com.google.api.services.youtube.model.CommentThreadListResponse;
 import com.google.common.collect.Lists;
 
-import edu.utd.client.KMeansWithEuclideanDistance;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.util.CoreMap;
+import edu.utd.authentication.Auth;
+import edu.utd.model.Content;
+import edu.utd.model.Movie;
+import edu.utd.model.MovieDTO;
 
 public class CommentHandling {
 	/**
@@ -65,7 +52,7 @@ public class CommentHandling {
 	 *            command line args (not used).
 	 */
 	public static void main(String[] args) {
-		int noOfPoints = 10;
+		int noOfPoints = 3;
 
 		ArrayList<String> names = new ArrayList<String>();
 		ArrayList<String> ids = new ArrayList<String>();
@@ -94,24 +81,16 @@ public class CommentHandling {
 		localFileNames.add("AfterEarth.txt");
 		localFileNames.add("TheInternship.txt");
 
-/*		ids.add("F7XEY3zQFUY");
-		ids.add("XUmD0OkBpqs");
-		ids.add("rwf95RnfoSQ"); 
-		ids.add("QXiwlFodZpA");// 353
-		ids.add("QOXup8chEoY");// 265
-		ids.add("r4mt9xLLHeY");// 203
-		ids.add("273oHnoR4NI");// 405
-		ids.add("pOyY7I-rFRg");// 253
-		ids.add("LZ_HugKUePs");// 290
-		ids.add("VUufKJJnHq8");// 230
-	*/	
-		
-		  ids.add("Ke1Y3P9D0Bc"); ids.add("CJIXOx2-GZ8");
-		  ids.add("rARN6agiW7o"); ids.add("K0LLaybEuzA");
-		  ids.add("QAEkuVgt6Aw"); ids.add("-xu3JLXfuwQ");
-		  ids.add("4OtM9j2lcUA"); ids.add("dKi5XoeTN0k");
-		  ids.add("CZIt20emgLY"); ids.add("cdnoqCViqUo"); 
-		 
+		ids.add("Ke1Y3P9D0Bc");
+		ids.add("CJIXOx2-GZ8");
+		ids.add("rARN6agiW7o");
+		ids.add("K0LLaybEuzA");
+		ids.add("QAEkuVgt6Aw");
+		ids.add("-xu3JLXfuwQ");
+		ids.add("4OtM9j2lcUA");
+		ids.add("dKi5XoeTN0k");
+		ids.add("CZIt20emgLY");
+		ids.add("cdnoqCViqUo");
 
 		directorFollowers.add(7943d);
 		directorFollowers.add(1836d);
@@ -135,19 +114,6 @@ public class CommentHandling {
 		actorFollowers.add(257326d);
 		actorFollowers.add(6683d);
 
-		/*
-		 * HashMap<String,String> movieMap= new HashMap<String, String>(); {
-		 * movieMap.put("Iron Man 3", "Ke1Y3P9D0Bc"); movieMap.put("The Iceman",
-		 * "CJIXOx2-GZ8"); movieMap.put("The Great Gatsby", "rARN6agiW7o");
-		 * movieMap.put("The Purge", "K0LLaybEuzA"); movieMap.put(
-		 * "Star Trek Into Darkness", "QAEkuVgt6Aw"); movieMap.put("Epic",
-		 * "-xu3JLXfuwQ"); movieMap.put("Now You See Me", "4OtM9j2lcUA");
-		 * movieMap.put("Fast & Furious 6", "dKi5XoeTN0k"); movieMap.put(
-		 * "After Earth", "CZIt20emgLY"); movieMap.put("The Internship",
-		 * "cdnoqCViqUo");
-		 * 
-		 * }
-		 */
 		List<Movie> movies = new ArrayList<Movie>();
 		List<String> scopes = Lists.newArrayList("https://www.googleapis.com/auth/youtube.force-ssl");
 		try {
@@ -188,17 +154,17 @@ public class CommentHandling {
 				List<CommentThread> videoComments = new ArrayList<CommentThread>();
 
 				if (localFile) {
-					List<String> comments= new ArrayList<String>();
+					List<String> comments = new ArrayList<String>();
 					try (BufferedReader br = new BufferedReader(new FileReader(FILENAME + localFileNames.get(i)))) {
-					    String line;
-					    while ((line = br.readLine()) != null) {
-					    	if(!line.isEmpty() && line.length()>0)
-					    	comments.add(line);
-					    }
+						String line;
+						while ((line = br.readLine()) != null) {
+							if (!line.isEmpty() && line.length() > 0)
+								comments.add(line);
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					tempMovie = analyseComments(comments);	
+					tempMovie = analyseComments(comments);
 				} else {
 					videoCommentsListResponse = youtube.commentThreads().list("snippet").setMaxResults(100l)
 							.setVideoId(videoId).setTextFormat("plainText").execute();
@@ -273,7 +239,7 @@ public class CommentHandling {
 				movie.setNegativeComments(negativeSent / total);
 				movie.setPositiveComments(positiveSent / total);
 				movie.setNeutralComments(neutralSent / total);
-				//saveComments(allComments, movie.getName());
+				// saveComments(allComments, movie.getName());
 
 				movies.add(movie);
 			}
@@ -315,23 +281,18 @@ public class CommentHandling {
 				System.out.println("Movie Name: " + movies.get(i).getName() + " Total Weight: "
 						+ movies.get(i).getOverallWeight());
 			}
-			
+
 			TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
-	        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
-			
+					.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
+
 			Map<String, Object> json = new HashMap<String, Object>();
 			for (int i = 0; i < noOfPoints; i++) {
-				json.put("movie",movies.get(i).getName());
-				json.put("weight",movies.get(i).getOverallWeight());
-				
-				IndexResponse response = client.prepareIndex("youtube", "comment")
-				        .setSource(json)
-				        .get();
+				json.put("movie", movies.get(i).getName());
+				json.put("weight", movies.get(i).getOverallWeight());
+
+				IndexResponse response = client.prepareIndex("youtube", "comment").setSource(json).get();
 			}
-			
-			
-			
-			
+
 			KMeansWithEuclideanDistance kMeans = new KMeansWithEuclideanDistance(3, movies);
 			List<Movie> clusterPoints = new ArrayList<Movie>();
 			clusterPoints.add(new Movie("Centroid1", "centroid1", 4.0d));
@@ -353,41 +314,6 @@ public class CommentHandling {
 		}
 	}
 
-	/*
-	 * private static String getVideoId() throws IOException {
-	 * 
-	 * String videoId = "";
-	 * 
-	 * System.out.print("Please enter a video id: "); BufferedReader bReader =
-	 * new BufferedReader(new InputStreamReader(System.in)); videoId =
-	 * bReader.readLine();
-	 * 
-	 * return videoId; }
-	 */
-
-	/*private static void saveComments(List<String> comments, String name) {
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILENAME + name + ".txt"))) {
-
-			for (String s : comments) {
-				bw.write(s);
-				bw.newLine();
-				bw.newLine();
-			}
-
-			// no need to close it.
-			// bw.close();
-
-			System.out.println("Done");
-
-		} catch (IOException e) {
-
-			e.printStackTrace();
-
-		}
-
-	}*/
-	
-	
 	private static MovieDTO analyseComments(List<String> comments) {
 		Content con = new Content();
 		MovieDTO mdto = new MovieDTO();
@@ -395,16 +321,16 @@ public class CommentHandling {
 		Double positiveSentiments = new Double(0);
 		Double negativeSentiments = new Double(0);
 		Double neutralSentiments = new Double(0);
-		
+
 		if (comments.isEmpty()) {
 			System.out.println("Can't get video comments.");
 		} else {
 			System.out.println("Total comments :: " + comments.size());
 			for (String comment : comments) {
-				
+
 				con.setComment(comment);
 				performSentimentAnalysis(con);
-				
+
 				String sentiment = con.getSentiment();
 				if (sentiment.equalsIgnoreCase("POSITIVE")) {
 					positiveSentiments += 1l;
