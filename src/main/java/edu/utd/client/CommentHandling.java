@@ -52,7 +52,7 @@ public class CommentHandling {
 	 *            command line args (not used).
 	 */
 	public static void main(String[] args) {
-		int noOfPoints = 3;
+		int noOfPoints = 10;
 
 		ArrayList<String> names = new ArrayList<String>();
 		ArrayList<String> ids = new ArrayList<String>();
@@ -70,7 +70,7 @@ public class CommentHandling {
 		names.add("The Internship");
 		Boolean localFile = true;
 		ArrayList<String> localFileNames = new ArrayList<String>();
-		localFileNames.add("Iron Man 3.txt");
+		localFileNames.add("IronMan3.txt");
 		localFileNames.add("The Iceman.txt");
 		localFileNames.add("The Great Gatsby.txt");
 		localFileNames.add("The_Purge.txt");
