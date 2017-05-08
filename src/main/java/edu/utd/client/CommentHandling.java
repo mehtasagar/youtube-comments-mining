@@ -52,7 +52,7 @@ public class CommentHandling {
 	 *            command line args (not used).
 	 */
 	public static void main(String[] args) {
-		int noOfPoints = 3;
+		int noOfPoints = 10;
 
 		ArrayList<String> names = new ArrayList<String>();
 		ArrayList<String> ids = new ArrayList<String>();
@@ -70,16 +70,16 @@ public class CommentHandling {
 		names.add("The Internship");
 		Boolean localFile = true;
 		ArrayList<String> localFileNames = new ArrayList<String>();
-		localFileNames.add("Iron Man 3.txt");
-		localFileNames.add("The Iceman.txt");
-		localFileNames.add("The Great Gatsby.txt");
-		localFileNames.add("The_Purge.txt");
-		localFileNames.add("StarTrekIntoDarkness.txt");
-		localFileNames.add("Epic.txt");
-		localFileNames.add("NowYouSeeMe.txt");
-		localFileNames.add("Fast&Furious6.txt");
-		localFileNames.add("AfterEarth.txt");
-		localFileNames.add("TheInternship.txt");
+		localFileNames.add("IronMan3_small.txt");
+		localFileNames.add("TheIceman_small.txt");
+		localFileNames.add("TheGreatGatsby_small.txt");
+		localFileNames.add("The_Purge_small.txt");
+		localFileNames.add("StarTrekIntoDarkness_small.txt");
+		localFileNames.add("Epic_small.txt");
+		localFileNames.add("NowYouSeeMe_small.txt");
+		localFileNames.add("Fast&Furious6_small.txt");
+		localFileNames.add("AfterEarth_small.txt");
+		localFileNames.add("TheInternship_small.txt");
 
 		ids.add("Ke1Y3P9D0Bc");
 		ids.add("CJIXOx2-GZ8");
@@ -158,13 +158,16 @@ public class CommentHandling {
 					try (BufferedReader br = new BufferedReader(new FileReader(FILENAME + localFileNames.get(i)))) {
 						String line;
 						while ((line = br.readLine()) != null) {
-							if (!line.isEmpty() && line.length() > 0)
+							if (!line.isEmpty() && line.length() > 0 && comments.size()<2000)
 								comments.add(line);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 					tempMovie = analyseComments(comments);
+					positiveSent = positiveSent + tempMovie.getMovie().getPositiveComments();
+					negativeSent += tempMovie.getMovie().getNegativeComments();
+					neutralSent += tempMovie.getMovie().getNeutralComments();
 				} else {
 					videoCommentsListResponse = youtube.commentThreads().list("snippet").setMaxResults(100l)
 							.setVideoId(videoId).setTextFormat("plainText").execute();
@@ -290,7 +293,7 @@ public class CommentHandling {
 				json.put("movie", movies.get(i).getName());
 				json.put("weight", movies.get(i).getOverallWeight());
 
-				IndexResponse response = client.prepareIndex("youtube", "comment").setSource(json).get();
+				IndexResponse response = client.prepareIndex("youtube1", "comment").setSource(json).get();
 			}
 
 			KMeansWithEuclideanDistance kMeans = new KMeansWithEuclideanDistance(3, movies);
@@ -332,6 +335,7 @@ public class CommentHandling {
 				performSentimentAnalysis(con);
 
 				String sentiment = con.getSentiment();
+			//	System.out.println(sentiment);
 				if (sentiment.equalsIgnoreCase("POSITIVE")) {
 					positiveSentiments += 1l;
 				} else if (sentiment.equalsIgnoreCase("NEGATIVE")) {
